@@ -339,9 +339,9 @@ func UpdatePassword(c *gin.Context) {
 
 func UpdateUser(c *gin.Context) {
 	var requestBody struct {
-		UserFullName      string `json:"user_fullname"`
-		Gender            string `json:"gender"`
-		WeightMeasurement string `json:"weight_measurement"`
+		UserFullName string `json:"user_fullname"`
+		Gender       string `json:"gender"`
+		Dob          string `json:"user_dob"`
 	}
 
 	// 1. Bind request body
@@ -365,8 +365,8 @@ func UpdateUser(c *gin.Context) {
 		updates["gender"] = requestBody.Gender
 	}
 
-	if requestBody.WeightMeasurement != "" {
-		updates["weight_measurement"] = requestBody.WeightMeasurement
+	if requestBody.Dob != "" {
+		updates["user_dob"] = requestBody.Dob
 	}
 
 	if len(updates) == 0 {
@@ -392,4 +392,29 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "profile updated successfully",
 	})
+}
+
+func GetUserProfile(c *gin.Context) {
+	claims := c.MustGet("claims").(*models.AccessTokenClaims)
+
+	type UserProfileResponse struct {
+		UserFullname string    `json:"user_fullname"`
+		DOB          time.Time `json:"user_dob"`
+		Gender       string    `json:"user_gender"`
+	}
+
+	var profile UserProfileResponse
+
+	err := services.DB.
+		Model(&models.Users{}).
+		Select("user_fullname, user_dob, user_gender").
+		Where("user_email = ?", claims.UserEmail).
+		First(&profile).Error
+
+	if err != nil {
+		c.JSON(404, gin.H{"message": "User not found"})
+		return
+	}
+
+	c.JSON(200, profile)
 }
