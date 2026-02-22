@@ -400,14 +400,14 @@ func GetUserProfile(c *gin.Context) {
 	type UserProfileResponse struct {
 		UserFullname string    `json:"user_fullname"`
 		DOB          time.Time `json:"user_dob"`
-		Gender       string    `json:"user_gender"`
+		Gender       string    `json:"gender"`
 	}
 
 	var profile UserProfileResponse
 
 	err := services.DB.
 		Model(&models.Users{}).
-		Select("user_fullname, user_dob, user_gender").
+		Select("user_fullname, user_dob, gender").
 		Where("user_email = ?", claims.UserEmail).
 		First(&profile).Error
 
