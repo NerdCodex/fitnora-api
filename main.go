@@ -26,7 +26,7 @@ func main() {
 	router.POST("resetpassword", controllers.ResetPassword)
 
 	userRoute.POST("/update", controllers.UpdateUser)
-	userRoute.POST("/updatepassword", controllers.UpdatePassword)
+	userRoute.GET("/updatepassword", controllers.UpdatePassword)
 	userRoute.GET("/profile", controllers.GetUserProfile)
 
 	router.Run("10.55.230.72:8080")

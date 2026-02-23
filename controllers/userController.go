@@ -398,22 +398,39 @@ func GetUserProfile(c *gin.Context) {
 	claims := c.MustGet("claims").(*models.AccessTokenClaims)
 
 	type UserProfileResponse struct {
-		UserFullname string    `json:"user_fullname"`
-		DOB          time.Time `json:"user_dob"`
-		Gender       string    `json:"gender"`
+		UserFullname string  `json:"user_fullname"`
+		UserDob      *string `json:"user_dob"`
+		Gender       string  `json:"gender"`
 	}
 
-	var profile UserProfileResponse
+	// Temporary struct to read from DB
+	var dbResult struct {
+		UserFullname string
+		UserDob      *time.Time
+		Gender       string
+	}
 
 	err := services.DB.
 		Model(&models.Users{}).
 		Select("user_fullname, user_dob, gender").
 		Where("user_email = ?", claims.UserEmail).
-		First(&profile).Error
+		First(&dbResult).Error
 
 	if err != nil {
 		c.JSON(404, gin.H{"message": "User not found"})
 		return
+	}
+
+	var dobStr *string
+	if dbResult.UserDob != nil {
+		formatted := dbResult.UserDob.Format("2006-01-02") // YYYY-MM-DD
+		dobStr = &formatted
+	}
+
+	profile := UserProfileResponse{
+		UserFullname: dbResult.UserFullname,
+		UserDob:      dobStr,
+		Gender:       dbResult.Gender,
 	}
 
 	c.JSON(200, profile)
