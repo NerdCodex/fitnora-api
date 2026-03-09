@@ -24,10 +24,19 @@ func main() {
 	router.POST("signin", controllers.UserSignin)
 	router.POST("forgotpassword", controllers.ForgotPassword)
 	router.POST("resetpassword", controllers.ResetPassword)
+	router.POST("example", controllers.AnalyzeFood)
 
 	userRoute.POST("/update", controllers.UpdateUser)
 	userRoute.GET("/updatepassword", controllers.UpdatePassword)
 	userRoute.GET("/profile", controllers.GetUserProfile)
 
-	router.Run("10.55.230.72:8080")
+	// Data Backup routes
+	userRoute.POST("/backup/upload", controllers.UploadUserBackups)
+	userRoute.GET("/backup/database", controllers.RestoreDatabase)
+	userRoute.GET("/backup/images", controllers.RestoreImages)
+
+	// Food Analysis routes
+	userRoute.POST("/food/analyze", controllers.AnalyzeFood)
+
+	router.Run("172.28.130.72:8080")
 }

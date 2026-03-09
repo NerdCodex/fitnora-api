@@ -14,7 +14,7 @@ import (
 func UploadUserBackups(c *gin.Context) {
 	claims := c.MustGet("claims").(*models.AccessTokenClaims)
 
-	uploadDir := "../uploads/"
+	uploadDir := "uploads/"
 	dbDir := uploadDir + "db/"
 	imgDir := uploadDir + "images/"
 
@@ -48,6 +48,16 @@ func UploadUserBackups(c *gin.Context) {
 	var backup models.DataBackup
 	result := services.DB.Where("user_id = ?", claims.UserID).First(&backup)
 
+	// ---- Delete old files BEFORE saving new ones ----
+	if result.Error == nil {
+		if backup.UserDBFiles != "" {
+			_ = os.Remove(dbDir + backup.UserDBFiles)
+		}
+		if backup.UserImages != "" {
+			_ = os.Remove(imgDir + backup.UserImages)
+		}
+	}
+
 	// ---- Save DB file ----
 	dbDst, err := os.Create(dbPath)
 	if err != nil {
@@ -76,10 +86,10 @@ func UploadUserBackups(c *gin.Context) {
 
 	// ---- Delete old files AFTER successful save ----
 	if result.Error == nil {
-		if backup.UserDBFiles != "" {
+		if backup.UserDBFiles != "" && backup.UserDBFiles != dbFileName {
 			_ = os.Remove(dbDir + backup.UserDBFiles)
 		}
-		if backup.UserImages != "" {
+		if backup.UserImages != "" && backup.UserImages != imgFileName {
 			_ = os.Remove(imgDir + backup.UserImages)
 		}
 	}
@@ -118,14 +128,14 @@ func RestoreDatabase(c *gin.Context) {
 		return
 	}
 
-	filePath := "../uploads/db/" + backup.UserDBFiles
+	filePath := "uploads/db/" + backup.UserDBFiles
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		c.JSON(404, gin.H{"message": "database file missing"})
 		return
 	}
 
-	c.File(filePath) // Streams directly (supports large files)
+	c.FileAttachment(filePath, backup.UserDBFiles) // Use FileAttachment to set download headers
 }
 
 func RestoreImages(c *gin.Context) {
@@ -138,12 +148,12 @@ func RestoreImages(c *gin.Context) {
 		return
 	}
 
-	filePath := "../uploads/images/" + backup.UserImages
+	filePath := "uploads/images/" + backup.UserImages
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		c.JSON(404, gin.H{"message": "image file missing"})
 		return
 	}
 
-	c.File(filePath)
+	c.FileAttachment(filePath, backup.UserImages)
 }
