@@ -38,5 +38,5 @@ func main() {
 	// Food Analysis routes
 	userRoute.POST("/food/analyze", controllers.AnalyzeFood)
 
-	router.Run("172.28.130.72:8080")
+	router.Run("")
 }
