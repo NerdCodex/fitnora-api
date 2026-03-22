@@ -2,3 +2,4 @@ old.env
 *.env
 .env.*
 env
+uploads/*
